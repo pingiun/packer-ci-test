@@ -9,6 +9,8 @@
       with pkgs; rec {
         defaultPackage =
           let script = pkgs.writeShellScriptBin "nixos-linode-packer" ''
+            set -euo pipefail
+
             out=$1
             shift
             logfile=$(mktemp)
@@ -19,9 +21,9 @@
             
             ${packer}/bin/packer build main.pkr.hcl "$@" | tee $logfile
             popd
-            
+
             echo -n "linode_image = \"" > terraform.tfvars
-            grep 'private/' $logfile | cut -d '(' -f 2 | tr -d ')' >> terraform.tfvars
+            grep 'private/' $logfile | cut -d '(' -f 2 | tr -d ')\n' >> terraform.tfvars
             echo "\"" >> terraform.tfvars
           '';
           in
