@@ -1,2 +1,4 @@
 export PACKER_CACHE_DIR=$HOME/.cache/packer
-export PKR_VAR_linode_token=$(pass linode_token)
+if which pass; then
+    export PKR_VAR_linode_token=$(pass linode_token)
+fi
