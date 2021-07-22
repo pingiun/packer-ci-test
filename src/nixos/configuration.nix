@@ -27,6 +27,13 @@ with utils;
   services.openssh.enable = true;
   virtualisation.docker.enable = true;
 
+  nix = {
+    package = pkgs.nixUnstable;
+    extraOptions = ''
+      experimental-features = nix-command flakes
+    '';
+  };
+
   # These get replaced within the packer build
   users.users.root.openssh.authorizedKeys.keys = [
     ''ssh_key''
