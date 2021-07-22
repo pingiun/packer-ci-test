@@ -25,6 +25,7 @@ with utils;
   '';
 
   services.openssh.enable = true;
+  virtualisation.docker.enable = true;
 
   # These get replaced within the packer build
   users.users.root.openssh.authorizedKeys.keys = [
