@@ -13,18 +13,12 @@
 
             out=$1
             shift
-            logfile=$(mktemp)
 
             pushd $out
             source scripts/init.sh
             ${packer}/bin/packer init $out
             
-            ${packer}/bin/packer build main.pkr.hcl "$@" | tee $logfile
-            popd
-
-            echo -n "linode_image = \"" > terraform.tfvars
-            grep 'private/' $logfile | cut -d '(' -f 2 | tr -d ')\n' >> terraform.tfvars
-            echo "\"" >> terraform.tfvars
+            ${packer}/bin/packer build main.pkr.hcl "$@"
           '';
           in
           stdenv.mkDerivation {
