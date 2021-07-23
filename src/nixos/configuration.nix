@@ -1,8 +1,9 @@
+{ nixpkgs, enableAgent }:
 { pkgs, options, lib, utils, ... }:
 with lib;
 with utils;
 {
-  imports = [ <nixpkgs/nixos/modules/profiles/qemu-guest.nix> ];
+  imports = [ (nixpkgs + "/nixos/modules/profiles/qemu-guest.nix") ];
 
   boot.loader.timeout = 10;
   boot.loader.grub.forceInstall = true;
@@ -23,6 +24,8 @@ with utils;
       swapon /dev/sdb
     fi
   '';
+
+  services.agent.enable = enableAgent;
 
   services.openssh.enable = true;
   virtualisation.docker.enable = true;

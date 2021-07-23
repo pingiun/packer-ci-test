@@ -25,14 +25,14 @@ variable "nixos_version" {
 }
 
 source "linode" "example" {
-  image                = "linode/debian9"
-  image_description    = "NixOS ${var.nixos_version}"
-  image_label          = "nixos-${var.nixos_version}-${local.timestamp}"
-  instance_label       = "packer-build-${local.timestamp}"
-  instance_type        = "g6-standard-2"
-  linode_token         = var.linode_token
-  region               = "us-east"
-  ssh_username         = "root"
+  image             = "linode/debian9"
+  image_description = "NixOS ${var.nixos_version}"
+  image_label       = "nixos-${var.nixos_version}-${local.timestamp}"
+  instance_label    = "packer-build-${local.timestamp}"
+  instance_type     = "g6-standard-2"
+  linode_token      = var.linode_token
+  region            = "us-east"
+  ssh_username      = "root"
 }
 
 data "sshkey" "install" {}
@@ -41,8 +41,8 @@ build {
   sources = ["source.linode.example"]
 
   provisioner "file" {
-    source      = "nixos/configuration.nix"
-    destination = "/root/configuration.nix"
+    sources     = ["nixos/configuration.nix", "flake.nix", "flake.lock"]
+    destination = "/root/"
   }
 
   provisioner "shell" {
@@ -54,20 +54,20 @@ build {
     inline = [
       "echo 'Installing dependencies for installation via Nix'",
       ". /root/.nix-profile/etc/profile.d/nix.sh",
-      "nix-channel --add https://nixos.org/channels/nixos-${var.nixos_version} nixpkgs",
-      "nix-channel --update",
-      "nix-env --quiet -iE \"_: with import <nixpkgs> {}; with import <nixpkgs/nixos> { configuration = {}; }; with config.system.build; [ jq nixos-install-tools ]\"",
+      "nix --log-format raw profile install '/root#installProfile'",
 
       "echo 'Copying Configuration'",
       "mkdir -p /etc/nixos/",
       "cp /root/configuration.nix /etc/nixos/",
+      "cp /root/flake.nix /etc/nixos",
+      "cp /root/flake.lock /etc/nixos",
 
       "echo 'Patching ssh key into configuration.nix'",
       "sed -i -e \"s#packer_key#$(cat /root/.ssh/authorized_keys)#g\" /etc/nixos/configuration.nix",
 
       "echo 'Installing NixOS based on the following configuration.nix'",
       "cat /etc/nixos/configuration.nix",
-      "nix-env -p /nix/var/nix/profiles/system -f '<nixpkgs/nixos>' -I nixos-config=/etc/nixos/configuration.nix -iA system",
+      "nix --log-format raw profile install --profile /nix/var/nix/profiles/system /etc/nixos#nixosConfigurations.peertube-image.config.system.build.toplevel",
       "chown -R 0.0 /nix",
       "touch /etc/NIXOS /etc/NIXOS_LUSTRATE",
       "echo etc/nixos > /etc/NIXOS_LUSTRATE",
@@ -77,8 +77,8 @@ build {
   }
 
   provisioner "file" {
-    source      = "nixos/configuration.nix"
-    destination = "/etc/nixos/configuration.nix"
+    sources     = ["nixos/configuration.nix", "flake.nix", "flake.lock"]
+    destination = "/etc/nixos/"
   }
 
   provisioner "shell" {
@@ -87,7 +87,7 @@ build {
       "export SSH_KEY=\"$(curl -s -H 'Authorization: Bearer ${var.linode_token}' https://api.linode.com/v4/profile/sshkeys | jq '.data | map(.ssh_key) | .[]' | tr '\n' ' ')\"",
       "sed -i -e \"s#''ssh_key''#$${SSH_KEY}#\" /etc/nixos/configuration.nix",
       "sed -i -e \"s#''packer_key''##\" /etc/nixos/configuration.nix",
-      "nixos-rebuild boot",
+      "nixos-rebuild boot --flake /etc/nixos#peertube",
       "nix-collect-garbage -d"
     ]
   }

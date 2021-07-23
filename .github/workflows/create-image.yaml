@@ -21,4 +21,6 @@ jobs:
           experimental-features = nix-command flakes
     - env: # Or as an environment variable
         PKR_VAR_linode_token: ${{ secrets.PKR_VAR_LINODE_TOKEN }}
-      run: nix run
+      run: |
+        nix flake update
+        nix run
