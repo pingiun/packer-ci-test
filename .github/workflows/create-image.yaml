@@ -24,3 +24,5 @@ jobs:
       run: |
         nix flake update
         nix run
+        oldest_image=$(curl -s -H "Authorization: Bearer $PKR_VAR_linode_token" https://api.linode.com/v4/images | jq --raw-output '.data | map(select( [(.id | startswith("private/")), (.label | startswith("nixos"))] | all )) | sort_by(.created)[0].id')
+        curl -H "Authorization: Bearer $PKR_VAR_linode_token" -X DELETE "https://api.linode.com/v4/images/${oldest_image}"
