@@ -31,7 +31,7 @@ source "linode" "example" {
   instance_label    = "packer-build-${local.timestamp}"
   instance_type     = "g6-standard-2"
   linode_token      = var.linode_token
-  region            = "us-east"
+  region            = "eu-central"
   ssh_username      = "root"
 }
 
