@@ -88,7 +88,13 @@ build {
       "sed -i -e \"s#''ssh_key''#$${SSH_KEY}#\" /etc/nixos/configuration.nix",
       "sed -i -e \"s#''packer_key''##\" /etc/nixos/configuration.nix",
       "nixos-rebuild boot --flake /etc/nixos#peertube",
-      "nix-collect-garbage -d"
+      "nix-collect-garbage -d",
+      # TODO: get the correct versions from somewhere centrally
+      "docker pull nginx:1.21.1",
+      "docker pull postgres:13.3",
+      "docker pull redis:6.2.4",
+      "docker pull chocobozzz/peertube:v3.3.0-buster",
+      "docker pull certbot/certbot:v1.17.0"
     ]
   }
 }
